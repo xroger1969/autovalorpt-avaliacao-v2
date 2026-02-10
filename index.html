@@ -37,28 +37,20 @@
       <form id="form">
         <div class="grid">
           <div>
-            <label>Nome</label>
-            <input name="nome" required />
-          </div>
-          <div>
-            <label>Email</label>
-            <input name="email" type="email" required />
-          </div>
-          <div>
-            <label>Contacto</label>
-            <input name="contacto" placeholder="+351..." required />
-          </div>
-          <div>
-            <label>Ano</label>
-            <input name="ano" type="number" min="1900" max="2100" required />
-          </div>
-          <div>
             <label>Marca</label>
             <input name="marca" required />
           </div>
           <div>
             <label>Modelo</label>
             <input name="modelo" required />
+          </div>
+          <div>
+            <label>Versão (opcional)</label>
+            <input name="versao" />
+          </div>
+          <div>
+            <label>Ano</label>
+            <input name="ano" type="number" min="1900" max="2100" required />
           </div>
           <div>
             <label>Km</label>
@@ -75,6 +67,32 @@
               <option>GPL</option>
               <option>Outro</option>
             </select>
+          </div>
+          <div>
+            <label>Caixa</label>
+            <select name="caixa" required>
+              <option value="">Seleciona</option>
+              <option>Manual</option>
+              <option>Automática</option>
+              <option>Semiautomática</option>
+              <option>Outra</option>
+            </select>
+          </div>
+          <div>
+            <label>Matrícula (opcional)</label>
+            <input name="matricula" />
+          </div>
+          <div>
+            <label>Nome</label>
+            <input name="nome" required />
+          </div>
+          <div>
+            <label>Contacto</label>
+            <input name="contacto" placeholder="+351..." required />
+          </div>
+          <div>
+            <label>Email</label>
+            <input name="email" type="email" required />
           </div>
         </div>
 

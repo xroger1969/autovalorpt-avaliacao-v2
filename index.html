@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AutoValorPT — Pedido de Avaliação</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#0b1220; color:#e7eefc; margin:0}
+    .wrap{max-width:860px;margin:0 auto;padding:24px}
+    .card{background:#111a2e;border:1px solid #223055;border-radius:16px;padding:20px}
+    h1{margin:0 0 10px}
+    p{opacity:.9}
+    label{display:block;margin:14px 0 6px}
+    input,select,textarea{
+      width:100%; padding:12px; border-radius:12px; border:1px solid #2b3a64;
+      background:#0e1730; color:#e7eefc;
+    }
+    textarea{min-height:110px; resize:vertical}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    .btn{
+      margin-top:16px; padding:12px 16px; border-radius:12px; border:0; cursor:pointer;
+      background:#2f6bff; color:white; font-weight:700;
+    }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .note{margin-top:12px; font-size:13px; opacity:.85}
+    .ok{background:#0f2a19;border:1px solid #1f6d3d; padding:12px; border-radius:12px; margin-top:14px}
+    .err{background:#2a0f14;border:1px solid #7a2433; padding:12px; border-radius:12px; margin-top:14px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Pedido de Avaliação — AutoValorPT</h1>
+      <p>Preenche os dados e anexa fotos. Vais receber confirmação e a equipa recebe notificação por e-mail.</p>
+
+      <form id="form">
+        <div class="grid">
+          <div>
+            <label>Nome</label>
+            <input name="nome" required />
+          </div>
+          <div>
+            <label>Email</label>
+            <input name="email" type="email" required />
+          </div>
+          <div>
+            <label>Contacto</label>
+            <input name="contacto" placeholder="+351..." required />
+          </div>
+          <div>
+            <label>Ano</label>
+            <input name="ano" type="number" min="1900" max="2100" required />
+          </div>
+          <div>
+            <label>Marca</label>
+            <input name="marca" required />
+          </div>
+          <div>
+            <label>Modelo</label>
+            <input name="modelo" required />
+          </div>
+          <div>
+            <label>Km</label>
+            <input name="km" type="number" min="0" required />
+          </div>
+          <div>
+            <label>Combustível</label>
+            <select name="combustivel" required>
+              <option value="">Seleciona</option>
+              <option>Gasolina</option>
+              <option>Gasóleo</option>
+              <option>Híbrido</option>
+              <option>Elétrico</option>
+              <option>GPL</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Observações</label>
+        <textarea name="observacoes" placeholder="Versão, extras, estado geral, etc."></textarea>
+
+        <label>Fotos (até 10)</label>
+        <input name="fotos" type="file" accept="image/*" multiple />
+
+        <button class="btn" id="btn" type="submit">Enviar pedido</button>
+        <div class="note">Ao submeter, estás a autorizar o contacto da AutoValorPT para efeitos de avaliação.</div>
+
+        <div id="msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://autovalorpt-backend.onrender.com/api/avaliacoes";
+
+    const form = document.getElementById("form");
+    const btn = document.getElementById("btn");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.innerHTML = "";
+      btn.disabled = true;
+
+      try {
+        const fd = new FormData(form);
+
+        const files = fd.getAll("fotos");
+        if (files && files.length > 10) throw new Error("Máximo 10 fotos.");
+
+        const res = await fetch(API_URL, { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) throw new Error(data?.error || "Falha ao enviar. Tenta novamente.");
+
+        msg.innerHTML = `<div class="ok"><b>Pedido recebido.</b><br/>Vamos analisar e entrar em contacto.</div>`;
+        form.reset();
+      } catch (err) {
+        msg.innerHTML = `<div class="err"><b>Não foi possível enviar.</b><br/>${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

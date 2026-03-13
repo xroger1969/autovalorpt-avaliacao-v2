@@ -213,11 +213,28 @@
       box-shadow: 0 16px 26px rgba(25, 95, 255, 0.35);
     }
 
+    .btn.is-sending:hover {
+      background: linear-gradient(130deg, #ff9a1a 0%, #ff7a00 100%);
+      box-shadow: 0 14px 24px rgba(255, 122, 0, 0.35);
+      transform: none;
+    }
+
+    .btn.is-success:hover {
+      background: linear-gradient(130deg, #1ea95c 0%, #158748 100%);
+      box-shadow: 0 14px 24px rgba(21, 135, 72, 0.35);
+      transform: none;
+    }
+
     .btn:disabled {
       opacity: .7;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
+    }
+
+    .btn.is-sending:disabled,
+    .btn.is-success:disabled {
+      opacity: 1;
     }
 
     @keyframes pulse {
@@ -393,16 +410,19 @@
       if (state === "sending") {
         btn.classList.add("is-sending");
         btn.textContent = "A enviar fotos...";
+        btn.setAttribute("aria-busy", "true");
         return;
       }
 
       if (state === "success") {
         btn.classList.add("is-success");
         btn.textContent = "Envio concluído";
+        btn.removeAttribute("aria-busy");
         return;
       }
 
       btn.textContent = "Enviar pedido";
+      btn.removeAttribute("aria-busy");
     };
 
     const updateUploadWarning = () => {

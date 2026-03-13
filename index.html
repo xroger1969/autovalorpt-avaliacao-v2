@@ -196,6 +196,17 @@
       transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
     }
 
+    .btn.is-sending {
+      background: linear-gradient(130deg, #ff9a1a 0%, #ff7a00 100%);
+      box-shadow: 0 14px 24px rgba(255, 122, 0, 0.35);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .btn.is-success {
+      background: linear-gradient(130deg, #1ea95c 0%, #158748 100%);
+      box-shadow: 0 14px 24px rgba(21, 135, 72, 0.35);
+    }
+
     .btn:hover {
       transform: translateY(-1px);
       background: linear-gradient(130deg, var(--accent-hover) 0%, #1a67df 100%);
@@ -209,6 +220,11 @@
       box-shadow: none;
     }
 
+    @keyframes pulse {
+      0%, 100% { filter: saturate(1); }
+      50% { filter: saturate(1.2); }
+    }
+
     .note {
       margin-top: 10px;
       color: #485674;
@@ -218,6 +234,19 @@
       border: 1px solid #d5e1f9;
       border-radius: 12px;
       padding: 10px 12px;
+    }
+
+    .upload-warning {
+      margin-top: 10px;
+      font-size: .95rem;
+      line-height: 1.45;
+      color: #1c2a4a;
+      font-weight: 800;
+      display: none;
+    }
+
+    .upload-warning.show {
+      display: block;
     }
 
     .ok, .err {
@@ -235,6 +264,7 @@
       .hero { border-radius: 18px; padding: 20px; }
       .section { padding: 16px; border-radius: 14px; }
       .grid { grid-template-columns: 1fr; }
+      .upload-warning { font-size: 1rem; }
     }
   </style>
 </head>
@@ -252,16 +282,16 @@
         <p class="section-intro">Partilha os teus contactos para conseguirmos validar a informação e responder com a avaliação.</p>
         <div class="grid">
           <div class="field">
-            <label class="required">Nome</label>
-            <input name="nome" required />
+            <label>Nome</label>
+            <input name="nome" />
           </div>
           <div class="field">
-            <label class="required">Contacto</label>
+            <label>Contacto</label>
             <input name="contacto" placeholder="+351..." required />
           </div>
           <div class="field field-full">
-            <label class="required">Email</label>
-            <input name="email" type="email" required />
+            <label>Email</label>
+            <input name="email" type="email" />
           </div>
         </div>
       </section>
@@ -271,28 +301,28 @@
         <p class="section-intro">Indica as características principais da viatura para uma avaliação mais rigorosa.</p>
         <div class="grid">
           <div class="field">
-            <label class="required">Marca</label>
-            <input name="marca" required />
+            <label>Marca</label>
+            <input name="marca" />
           </div>
           <div class="field">
-            <label class="required">Modelo</label>
-            <input name="modelo" required />
+            <label>Modelo</label>
+            <input name="modelo" />
           </div>
           <div class="field">
             <label>Versão (opcional)</label>
             <input name="versao" />
           </div>
           <div class="field">
-            <label class="required">Ano</label>
-            <input name="ano" type="number" min="1900" max="2100" required />
+            <label>Ano</label>
+            <input name="ano" type="number" min="1900" max="2100" />
           </div>
           <div class="field">
-            <label class="required">Km</label>
-            <input name="km" type="number" min="0" required />
+            <label>Km</label>
+            <input name="km" type="number" min="0" />
           </div>
           <div class="field">
-            <label class="required">Combustível</label>
-            <select name="combustivel" required>
+            <label>Combustível</label>
+            <select name="combustivel">
               <option value="">Seleciona</option>
               <option>Gasolina</option>
               <option>Gasóleo</option>
@@ -303,8 +333,8 @@
             </select>
           </div>
           <div class="field">
-            <label class="required">Caixa</label>
-            <select name="caixa" required>
+            <label>Caixa</label>
+            <select name="caixa">
               <option value="">Seleciona</option>
               <option>Manual</option>
               <option>Automática</option>
@@ -339,7 +369,8 @@
 
       <section class="section actions">
         <button class="btn" id="btn" type="submit">Enviar pedido</button>
-        <div class="note">Ao submeter, estás a autorizar o contacto da AutoValorPT para efeitos de avaliação.</div>
+        <div class="upload-warning" id="uploadWarning"><b>Por favor, aguarde até o envio estar completo sem sair desta página — pode demorar algum tempo dependendo do tamanho das imagens enviadas.</b></div>
+        <div class="note">Ao submeter, estás a autorizar o contacto da AutoValorPT para efeitos de avaliação. O envio pode demorar algum tempo dependendo do número e tamanho das fotos, não saias da pagina até o envio estar concluído </div>
         <div id="msg"></div>
       </section>
     </form>
@@ -351,11 +382,44 @@
     const form = document.getElementById("form");
     const btn = document.getElementById("btn");
     const msg = document.getElementById("msg");
+    const photosInput = form.querySelector('input[name="fotos"]');
+    const uploadWarning = document.getElementById("uploadWarning");
+
+    let isSending = false;
+
+    const setButtonState = (state) => {
+      btn.classList.remove("is-sending", "is-success");
+
+      if (state === "sending") {
+        btn.classList.add("is-sending");
+        btn.textContent = "A enviar fotos...";
+        return;
+      }
+
+      if (state === "success") {
+        btn.classList.add("is-success");
+        btn.textContent = "Envio concluído";
+        return;
+      }
+
+      btn.textContent = "Enviar pedido";
+    };
+
+    const updateUploadWarning = () => {
+      const hasPhotosSelected = photosInput.files && photosInput.files.length > 0;
+      uploadWarning.classList.toggle("show", hasPhotosSelected || isSending);
+    };
+
+    photosInput.addEventListener("change", updateUploadWarning);
+    updateUploadWarning();
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       msg.innerHTML = "";
       btn.disabled = true;
+      isSending = true;
+      setButtonState("sending");
+      updateUploadWarning();
 
       try {
         const fd = new FormData(form);
@@ -368,11 +432,17 @@
 
         if (!res.ok) throw new Error(data?.error || "Falha ao enviar. Tenta novamente.");
 
+        setButtonState("success");
         msg.innerHTML = `<div class="ok"><b>Pedido recebido.</b><br/>Vamos analisar e entrar em contacto.</div>`;
         form.reset();
+        isSending = false;
+        updateUploadWarning();
       } catch (err) {
+        setButtonState("default");
         msg.innerHTML = `<div class="err"><b>Não foi possível enviar.</b><br/>${err.message}</div>`;
       } finally {
+        isSending = false;
+        updateUploadWarning();
         btn.disabled = false;
       }
     });

@@ -5,59 +5,293 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AutoValorPT — Pedido de Avaliação</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#0b1220; color:#e7eefc; margin:0}
-    .wrap{max-width:860px;margin:0 auto;padding:24px}
-    .card{background:#111a2e;border:1px solid #223055;border-radius:16px;padding:20px}
-    h1{margin:0 0 10px}
-    p{opacity:.9}
-    label{display:block;margin:14px 0 6px}
-    input,select,textarea{
-      width:100%; padding:12px; border-radius:12px; border:1px solid #2b3a64;
-      background:#0e1730; color:#e7eefc;
+    :root {
+      --bg: #f2f5fb;
+      --bg-strong: #0d1b38;
+      --surface: #ffffff;
+      --surface-soft: #f8faff;
+      --text: #0f1f3d;
+      --text-muted: #56617a;
+      --accent: #2358ff;
+      --accent-hover: #1a47d9;
+      --border: #d9e2f3;
+      --shadow: 0 12px 38px rgba(12, 31, 75, 0.08);
+      --radius: 18px;
     }
-    textarea{min-height:110px; resize:vertical}
-    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-    @media (max-width:720px){.grid{grid-template-columns:1fr}}
-    .btn{
-      margin-top:16px; padding:12px 16px; border-radius:12px; border:0; cursor:pointer;
-      background:#2f6bff; color:white; font-weight:700;
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% -20%, #2d5fff 0%, rgba(45, 95, 255, 0) 42%),
+        radial-gradient(circle at 100% 0%, #dae6ff 0%, rgba(218, 230, 255, 0) 35%),
+        var(--bg);
+      min-height: 100vh;
     }
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .note{margin-top:12px; font-size:13px; opacity:.85}
-    .ok{background:#0f2a19;border:1px solid #1f6d3d; padding:12px; border-radius:12px; margin-top:14px}
-    .err{background:#2a0f14;border:1px solid #7a2433; padding:12px; border-radius:12px; margin-top:14px}
+
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 26px 20px 38px;
+    }
+
+    .hero {
+      background: linear-gradient(140deg, #0b1f46 0%, #18356f 62%, #19418b 100%);
+      color: #eef4ff;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px 28px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      margin-bottom: 20px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.16);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 1.4rem + 1vw, 2.3rem);
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      max-width: 780px;
+      line-height: 1.55;
+      color: #d8e5ff;
+      font-size: 1rem;
+    }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .section h2 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+    }
+
+    .section-intro {
+      margin: 0 0 18px;
+      color: var(--text-muted);
+      font-size: .95rem;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field-full { grid-column: 1 / -1; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    label {
+      font-size: .92rem;
+      font-weight: 600;
+      color: #1a2c53;
+    }
+
+    .required::after {
+      content: " *";
+      color: #e2354f;
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #c8d5f0;
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: var(--text);
+      min-height: 48px;
+      padding: 11px 13px;
+      font-size: .96rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background-color .2s;
+    }
+
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #5d6f95 50%),
+        linear-gradient(135deg, #5d6f95 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% + 1px),
+        calc(100% - 12px) calc(50% + 1px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 34px;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #2d63ff;
+      box-shadow: 0 0 0 4px rgba(45, 99, 255, 0.16);
+      background: #fff;
+    }
+
+    .upload {
+      border: 1px dashed #9cb4ea;
+      background: linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .upload-help {
+      margin: 0 0 10px;
+      color: var(--text-muted);
+      font-size: .9rem;
+    }
+
+    .actions {
+      background: linear-gradient(180deg, #ffffff, #f9fbff);
+    }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      min-height: 52px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(130deg, var(--accent) 0%, #1b7bff 100%);
+      box-shadow: 0 14px 24px rgba(25, 95, 255, 0.28);
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(130deg, var(--accent-hover) 0%, #1a67df 100%);
+      box-shadow: 0 16px 26px rgba(25, 95, 255, 0.35);
+    }
+
+    .btn:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .note {
+      margin-top: 10px;
+      color: #485674;
+      font-size: .88rem;
+      line-height: 1.45;
+      background: #f5f8ff;
+      border: 1px solid #d5e1f9;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .ok, .err {
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 14px;
+      font-size: .95rem;
+    }
+
+    .ok { background: #eefcf3; border: 1px solid #98dbb0; color: #1d6d3a; }
+    .err { background: #fff2f4; border: 1px solid #f2a2af; color: #8b2535; }
+
+    @media (max-width: 760px) {
+      .page { padding: 16px 14px 26px; }
+      .hero { border-radius: 18px; padding: 20px; }
+      .section { padding: 16px; border-radius: 14px; }
+      .grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
+  <main class="page">
+    <header class="hero">
+      <span class="hero-badge">AutoValorPT · Avaliação de viatura</span>
       <h1>Pedido de Avaliação — AutoValorPT</h1>
-      <p>Preenche os dados e anexa fotos. Vais receber confirmação e a equipa recebe notificação por e-mail.</p>
+      <p>Preenche o formulário com os dados da tua viatura e anexa fotos para receberes uma análise profissional. Vais receber confirmação e a equipa recebe notificação por e-mail.</p>
+    </header>
 
-      <form id="form">
+    <form id="form">
+      <section class="section">
+        <h2>Dados de contacto</h2>
+        <p class="section-intro">Partilha os teus contactos para conseguirmos validar a informação e responder com a avaliação.</p>
         <div class="grid">
-          <div>
-            <label>Marca</label>
+          <div class="field">
+            <label class="required">Nome</label>
+            <input name="nome" required />
+          </div>
+          <div class="field">
+            <label class="required">Contacto</label>
+            <input name="contacto" placeholder="+351..." required />
+          </div>
+          <div class="field field-full">
+            <label class="required">Email</label>
+            <input name="email" type="email" required />
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Dados da viatura</h2>
+        <p class="section-intro">Indica as características principais da viatura para uma avaliação mais rigorosa.</p>
+        <div class="grid">
+          <div class="field">
+            <label class="required">Marca</label>
             <input name="marca" required />
           </div>
-          <div>
-            <label>Modelo</label>
+          <div class="field">
+            <label class="required">Modelo</label>
             <input name="modelo" required />
           </div>
-          <div>
+          <div class="field">
             <label>Versão (opcional)</label>
             <input name="versao" />
           </div>
-          <div>
-            <label>Ano</label>
+          <div class="field">
+            <label class="required">Ano</label>
             <input name="ano" type="number" min="1900" max="2100" required />
           </div>
-          <div>
-            <label>Km</label>
+          <div class="field">
+            <label class="required">Km</label>
             <input name="km" type="number" min="0" required />
           </div>
-          <div>
-            <label>Combustível</label>
+          <div class="field">
+            <label class="required">Combustível</label>
             <select name="combustivel" required>
               <option value="">Seleciona</option>
               <option>Gasolina</option>
@@ -68,8 +302,8 @@
               <option>Outro</option>
             </select>
           </div>
-          <div>
-            <label>Caixa</label>
+          <div class="field">
+            <label class="required">Caixa</label>
             <select name="caixa" required>
               <option value="">Seleciona</option>
               <option>Manual</option>
@@ -78,37 +312,38 @@
               <option>Outra</option>
             </select>
           </div>
-          <div>
+          <div class="field">
             <label>Matrícula (opcional)</label>
             <input name="matricula" />
           </div>
-          <div>
-            <label>Nome</label>
-            <input name="nome" required />
-          </div>
-          <div>
-            <label>Contacto</label>
-            <input name="contacto" placeholder="+351..." required />
-          </div>
-          <div>
-            <label>Email</label>
-            <input name="email" type="email" required />
-          </div>
         </div>
+      </section>
 
-        <label>Observações</label>
-        <textarea name="observacoes" placeholder="Versão, extras, estado geral, etc."></textarea>
+      <section class="section">
+        <h2>Informações adicionais</h2>
+        <p class="section-intro">Acrescenta detalhes relevantes (estado geral, extras, histórico, observações).</p>
+        <div class="field">
+          <label>Observações</label>
+          <textarea name="observacoes" placeholder="Versão, extras, estado geral, etc."></textarea>
+        </div>
+      </section>
 
-        <label>Fotos (até 10)</label>
-        <input name="fotos" type="file" accept="image/*" multiple />
+      <section class="section upload">
+        <h2>Fotos da viatura</h2>
+        <p class="upload-help">Anexa imagens nítidas do exterior e interior para melhorar a precisão da avaliação. Máximo de 10 fotos.</p>
+        <div class="field">
+          <label>Fotos (até 10)</label>
+          <input name="fotos" type="file" accept="image/*" multiple />
+        </div>
+      </section>
 
+      <section class="section actions">
         <button class="btn" id="btn" type="submit">Enviar pedido</button>
         <div class="note">Ao submeter, estás a autorizar o contacto da AutoValorPT para efeitos de avaliação.</div>
-
         <div id="msg"></div>
-      </form>
-    </div>
-  </div>
+      </section>
+    </form>
+  </main>
 
   <script>
     const API_URL = "https://autovalorpt-backend.onrender.com/api/avaliacoes";

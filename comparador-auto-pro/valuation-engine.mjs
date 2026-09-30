@@ -211,10 +211,10 @@ function confidence(valid, marketValue, subject) {
   ));
 }
 
-function riskReserve({ saleLikely, riskFlags = [], confidencePct }, config) {
-  const base = saleLikely * config.riskReservePct;
+function riskReserve({ saleLikelyEconomic, riskFlags = [], confidencePct }, config) {
+  const base = saleLikelyEconomic * config.riskReservePct;
   const flagPenalty = riskFlags.reduce((sum, f) => sum + num(f.reserve_eur), 0);
-  const lowConfidencePenalty = confidencePct < 60 ? saleLikely * 0.02 : confidencePct < 75 ? saleLikely * 0.01 : 0;
+  const lowConfidencePenalty = confidencePct < 60 ? saleLikelyEconomic * 0.02 : confidencePct < 75 ? saleLikelyEconomic * 0.01 : 0;
   return Math.round(base + flagPenalty + lowConfidencePenalty);
 }
 
@@ -288,6 +288,17 @@ export function evaluatePurchase(input, customConfig = {}) {
     ? Math.round(saleLikely * (1 - fastPct))
     : NaN;
 
+  const tax = input.tax || {};
+  const vatRate = num(tax.vat_rate, 0.23);
+  const taxMode = tax.mode || (subject.vat_deductible === true ? "deductible" : "gross");
+  const factor = taxMode === "deductible" ? (1 + vatRate) : 1;
+  const toEconomic = value => Number.isFinite(value) ? value / factor : value;
+  const fromEconomic = value => Number.isFinite(value) ? value * factor : value;
+
+  const marketValueEconomic = toEconomic(marketValue);
+  const saleLikelyEconomic = toEconomic(saleLikely);
+  const saleFastEconomic = toEconomic(saleFast);
+
   const costs = input.costs || {};
   const fixedCosts =
     num(costs.auction_fee) +
@@ -298,9 +309,9 @@ export function evaluatePurchase(input, customConfig = {}) {
     num(costs.stock_finance) +
     num(costs.other);
 
-  const reserve = Number.isFinite(saleLikely)
+  const reserve = Number.isFinite(saleLikelyEconomic)
     ? riskReserve({
-        saleLikely,
+        saleLikelyEconomic,
         riskFlags: input.risk_flags || [],
         confidencePct,
       }, config)
@@ -309,17 +320,26 @@ export function evaluatePurchase(input, customConfig = {}) {
   const targetMargin = num(input.target_margin, config.targetMargin);
   const minimumMargin = num(input.minimum_margin, config.minimumMargin);
 
-  const maxPurchase = Number.isFinite(saleLikely)
-    ? Math.round(saleLikely - fixedCosts - reserve - targetMargin)
+  const maxPurchaseEconomic = Number.isFinite(saleLikelyEconomic)
+    ? saleLikelyEconomic - fixedCosts - reserve - targetMargin
     : NaN;
 
-  const absoluteMax = Number.isFinite(saleLikely)
-    ? Math.round(saleLikely - fixedCosts - reserve - minimumMargin)
+  const absoluteMaxEconomic = Number.isFinite(saleLikelyEconomic)
+    ? saleLikelyEconomic - fixedCosts - reserve - minimumMargin
+    : NaN;
+
+  const maxPurchase = Number.isFinite(maxPurchaseEconomic)
+    ? Math.round(fromEconomic(maxPurchaseEconomic))
+    : NaN;
+
+  const absoluteMax = Number.isFinite(absoluteMaxEconomic)
+    ? Math.round(fromEconomic(absoluteMaxEconomic))
     : NaN;
 
   const currentPrice = num(input.current_purchase_price, NaN);
-  const expectedMargin = Number.isFinite(currentPrice) && Number.isFinite(saleLikely)
-    ? Math.round(saleLikely - currentPrice - fixedCosts - reserve)
+  const currentPriceEconomic = toEconomic(currentPrice);
+  const expectedMargin = Number.isFinite(currentPriceEconomic) && Number.isFinite(saleLikelyEconomic)
+    ? Math.round(saleLikelyEconomic - currentPriceEconomic - fixedCosts - reserve)
     : NaN;
 
   let decision = "sem dados";
@@ -339,16 +359,27 @@ export function evaluatePurchase(input, customConfig = {}) {
       marketValue,
       saleLikely,
       saleFast,
+      marketValueEconomic: Math.round(marketValueEconomic),
+      saleLikelyEconomic: Math.round(saleLikelyEconomic),
+      saleFastEconomic: Math.round(saleFastEconomic),
       confidencePct,
+    },
+    tax: {
+      mode: taxMode,
+      vatRate,
+      basis: taxMode === "deductible" ? "net_of_recoverable_vat" : "gross",
     },
     purchase: {
       currentPrice,
+      currentPriceEconomic: Math.round(currentPriceEconomic),
       fixedCosts: Math.round(fixedCosts),
       riskReserve: reserve,
       targetMargin,
       minimumMargin,
       maxPurchase,
+      maxPurchaseEconomic: Math.round(maxPurchaseEconomic),
       absoluteMax,
+      absoluteMaxEconomic: Math.round(absoluteMaxEconomic),
       expectedMargin,
       decision,
     },

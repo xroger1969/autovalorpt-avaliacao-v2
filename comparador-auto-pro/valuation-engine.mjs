@@ -147,9 +147,9 @@ function adjustPrice(subject, comp, config) {
   const kmDelta = num(comp.mileage_km) - num(subject.mileage_km);
   adjusted += (kmDelta / 1000) * config.kmAdjustmentPer1000;
 
-  // Alvo mais novo => vale mais.
+  // Ajustar o comparável à idade do alvo: alvo mais novo => vale mais; alvo mais velho => vale menos.
   const months = ageMonthDelta(subject, comp);
-  adjusted += (-months) * config.ageAdjustmentPerMonth;
+  adjusted += months * config.ageAdjustmentPerMonth;
 
   // Ajuste simples de equipamento; será substituído por coeficientes aprendidos.
   const s = new Set(list(subject.equipment));

@@ -93,3 +93,40 @@ test("older target is valued below an otherwise identical newer comparable", () 
 
   assert.equal(result.market.marketValue, 25660);
 });
+
+
+test("deductible VAT is removed before margin calculation and restored for bid ceiling", () => {
+  const vatSubject = {
+    ...subject,
+    vat_deductible: true,
+  };
+  const comps = [
+    { ...vatSubject, price: 26000, days_since_seen: 1, url: "vat1" },
+    { ...vatSubject, price: 26000, days_since_seen: 1, url: "vat2" },
+    { ...vatSubject, price: 26000, days_since_seen: 1, url: "vat3" },
+    { ...vatSubject, price: 26000, days_since_seen: 1, url: "vat4" },
+    { ...vatSubject, price: 26000, days_since_seen: 1, url: "vat5" },
+  ];
+
+  const result = evaluatePurchase({
+    subject: vatSubject,
+    comparables: comps,
+    current_purchase_price: 23300,
+    negotiation_discount_pct: 0,
+    fast_sale_discount_pct: 0,
+    tax: { mode: "deductible", vat_rate: 0.23 },
+    costs: { auction_fee: 370.50, other: 1129.50 },
+    target_margin: 2500,
+    minimum_margin: 1800,
+  }, {
+    riskReservePct: 0,
+    kmAdjustmentPer1000: 0,
+    ageAdjustmentPerMonth: 0,
+    equipmentUnitAdjustment: 0,
+  });
+
+  assert.equal(result.tax.basis, "net_of_recoverable_vat");
+  assert.equal(result.market.saleLikelyEconomic, 21138);
+  assert.equal(result.purchase.maxPurchase, 21080);
+  assert.ok(result.purchase.expectedMargin < 1000);
+});

@@ -58,3 +58,38 @@ test("evaluation returns a bounded decision and excludes incompatible data", () 
   assert.ok(["compra muito interessante", "boa compra", "comprar só com justificação", "não comprar"].includes(result.purchase.decision));
   assert.ok(Number.isFinite(result.purchase.maxPurchase));
 });
+
+
+test("older target is valued below an otherwise identical newer comparable", () => {
+  const olderSubject = {
+    ...subject,
+    first_registration: "2021-08-01",
+    mileage_km: 60000,
+  };
+  const newerComp = {
+    ...olderSubject,
+    first_registration: "2021-12-01",
+    price: 26000,
+    days_since_seen: 1,
+    url: "newer-comp",
+  };
+
+  const result = evaluatePurchase({
+    subject: olderSubject,
+    comparables: [newerComp],
+    current_purchase_price: 20000,
+    negotiation_discount_pct: 0,
+    fast_sale_discount_pct: 0,
+    costs: {},
+    target_margin: 0,
+    minimum_margin: 0,
+  }, {
+    minSimilarity: 0,
+    riskReservePct: 0,
+    kmAdjustmentPer1000: 0,
+    ageAdjustmentPerMonth: 85,
+    equipmentUnitAdjustment: 0,
+  });
+
+  assert.equal(result.market.marketValue, 25660);
+});

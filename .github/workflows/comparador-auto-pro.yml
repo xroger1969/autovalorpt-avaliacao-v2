@@ -1,0 +1,23 @@
+name: Comparador Auto Pro Core
+
+on:
+  push:
+    branches:
+      - comparador-auto-pro-v1
+    paths:
+      - 'comparador-auto-pro/**'
+      - '.github/workflows/comparador-auto-pro.yml'
+  workflow_dispatch:
+
+jobs:
+  test-core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: comparador-auto-pro
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
